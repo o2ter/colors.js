@@ -64,8 +64,18 @@ export default [
     ...rollupConfig,
     output: [
       {
-        file: `dist/index.d.ts`,
+        entryFileNames: '[name].d.ts',
+        chunkFileNames: 'internals/[name]-[hash].d.ts',
+        dir: './dist',
         format: 'es',
+        sourcemap: true,
+      },
+      {
+        entryFileNames: '[name].d.mts',
+        chunkFileNames: 'internals/[name]-[hash].d.mts',
+        dir: './dist',
+        format: 'es',
+        sourcemap: true,
       },
     ],
     plugins: [
