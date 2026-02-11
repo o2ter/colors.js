@@ -1,5 +1,5 @@
 {
-  "name": "colors.js",
+  "name": "@o2ter/colors.js",
   "version": "1.0.0",
   "main": "dist/index",
   "module": "dist/index",
