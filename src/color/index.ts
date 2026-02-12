@@ -250,6 +250,73 @@ export const hwbToRgb = (h: number, w: number, b: number): ColorValue => {
     (Math.round(blue * 255) << 8)
   );
 };
+
+/**
+ * Converts RGB color values to HSL format
+ * @param r - Red component (0-255)
+ * @param g - Green component (0-255)
+ * @param b - Blue component (0-255)
+ * @returns Object with h (0-1), s (0-1), l (0-1) values
+ */
+export const rgbToHsl = (r: number, g: number, b: number): { h: number; s: number; l: number } => {
+  // Normalize RGB values to 0-1 range
+  const red = r / 255;
+  const green = g / 255;
+  const blue = b / 255;
+
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const diff = max - min;
+
+  // Calculate lightness
+  const l = (max + min) / 2;
+
+  // Calculate saturation
+  let s = 0;
+  if (diff !== 0) {
+    s = l > 0.5 ? diff / (2 - max - min) : diff / (max + min);
+  }
+
+  // Calculate hue
+  let h = 0;
+  if (diff !== 0) {
+    if (max === red) {
+      h = ((green - blue) / diff + (green < blue ? 6 : 0)) / 6;
+    } else if (max === green) {
+      h = ((blue - red) / diff + 2) / 6;
+    } else {
+      h = ((red - green) / diff + 4) / 6;
+    }
+  }
+
+  return { h, s, l };
+};
+
+/**
+ * Converts RGB color values to HWB format
+ * @param r - Red component (0-255)
+ * @param g - Green component (0-255)
+ * @param b - Blue component (0-255)
+ * @returns Object with h (0-1), w (0-1), b (0-1) values
+ */
+export const rgbToHwb = (r: number, g: number, b: number): { h: number; w: number; b: number } => {
+  // Get hue from HSL conversion
+  const { h } = rgbToHsl(r, g, b);
+
+  // Normalize RGB values to 0-1 range
+  const red = r / 255;
+  const green = g / 255;
+  const blue = b / 255;
+
+  // Calculate whiteness (minimum of RGB)
+  const w = Math.min(red, green, blue);
+
+  // Calculate blackness (1 - maximum of RGB)
+  const blackness = 1 - Math.max(red, green, blue);
+
+  return { h, w, b: blackness };
+};
+
 /** Interface for color matcher patterns */
 interface ColorMatchers {
   rgb: RegExp;

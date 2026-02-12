@@ -26,6 +26,8 @@
 import {
   hslToRgb,
   hwbToRgb,
+  rgbToHsl,
+  rgbToHwb,
   normalizeColor,
   getRed,
   getGreen,
@@ -134,6 +136,254 @@ describe('Color Utilities', () => {
     it('should throw error for invalid blackness values', () => {
       expect(() => hwbToRgb(0, 0.5, -0.1)).toThrow('HWB whiteness and blackness values must be between 0 and 1');
       expect(() => hwbToRgb(0, 0.5, 1.1)).toThrow('HWB whiteness and blackness values must be between 0 and 1');
+    });
+  });
+
+  describe('rgbToHsl', () => {
+    it('should convert RGB to HSL correctly for primary colors', () => {
+      // Red: rgb(255, 0, 0) -> hsl(0, 100%, 50%)
+      const red = rgbToHsl(255, 0, 0);
+      expect(red.h).toBeCloseTo(0, 5);
+      expect(red.s).toBeCloseTo(1, 5);
+      expect(red.l).toBeCloseTo(0.5, 5);
+
+      // Green: rgb(0, 255, 0) -> hsl(120, 100%, 50%)
+      const green = rgbToHsl(0, 255, 0);
+      expect(green.h).toBeCloseTo(120 / 360, 5);
+      expect(green.s).toBeCloseTo(1, 5);
+      expect(green.l).toBeCloseTo(0.5, 5);
+
+      // Blue: rgb(0, 0, 255) -> hsl(240, 100%, 50%)
+      const blue = rgbToHsl(0, 0, 255);
+      expect(blue.h).toBeCloseTo(240 / 360, 5);
+      expect(blue.s).toBeCloseTo(1, 5);
+      expect(blue.l).toBeCloseTo(0.5, 5);
+    });
+
+    it('should handle grayscale colors', () => {
+      // White: rgb(255, 255, 255) -> hsl(0, 0%, 100%)
+      const white = rgbToHsl(255, 255, 255);
+      expect(white.h).toBeCloseTo(0, 5);
+      expect(white.s).toBeCloseTo(0, 5);
+      expect(white.l).toBeCloseTo(1, 5);
+
+      // Black: rgb(0, 0, 0) -> hsl(0, 0%, 0%)
+      const black = rgbToHsl(0, 0, 0);
+      expect(black.h).toBeCloseTo(0, 5);
+      expect(black.s).toBeCloseTo(0, 5);
+      expect(black.l).toBeCloseTo(0, 5);
+
+      // Gray: rgb(128, 128, 128) -> hsl(0, 0%, 50.2%)
+      const gray = rgbToHsl(128, 128, 128);
+      expect(gray.h).toBeCloseTo(0, 5);
+      expect(gray.s).toBeCloseTo(0, 5);
+      expect(gray.l).toBeCloseTo(0.502, 2);
+    });
+
+    it('should be reversible with hslToRgb', () => {
+      const testColors = [
+        { r: 255, g: 0, b: 0 },
+        { r: 0, g: 255, b: 0 },
+        { r: 0, g: 0, b: 255 },
+        { r: 128, g: 64, b: 192 },
+        { r: 255, g: 128, b: 0 },
+      ];
+
+      testColors.forEach(({ r, g, b }) => {
+        const hsl = rgbToHsl(r, g, b);
+        const rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+        const rOut = getRed(rgb | 0xff);
+        const gOut = getGreen(rgb | 0xff);
+        const bOut = getBlue(rgb | 0xff);
+
+        // Allow small rounding errors
+        expect(rOut).toBeCloseTo(r, 0);
+        expect(gOut).toBeCloseTo(g, 0);
+        expect(bOut).toBeCloseTo(b, 0);
+      });
+    });
+
+    it('should correctly convert named colors to HSL', () => {
+      // limegreen: rgb(50, 205, 50) -> hsl(120°, 61%, 50%)
+      const limegreen = normalizeColor('limegreen')!;
+      const limegreenHsl = rgbToHsl(getRed(limegreen), getGreen(limegreen), getBlue(limegreen));
+      expect(limegreenHsl.h).toBeCloseTo(120 / 360, 2);
+      expect(limegreenHsl.s).toBeCloseTo(0.608, 2);
+      expect(limegreenHsl.l).toBeCloseTo(0.5, 2);
+
+      // cornflowerblue: rgb(100, 149, 237) -> hsl(219°, 79%, 66%)
+      const cornflowerblue = normalizeColor('cornflowerblue')!;
+      const cornflowerblueHsl = rgbToHsl(getRed(cornflowerblue), getGreen(cornflowerblue), getBlue(cornflowerblue));
+      expect(cornflowerblueHsl.h).toBeCloseTo(219 / 360, 2);
+      expect(cornflowerblueHsl.s).toBeCloseTo(0.792, 2);
+      expect(cornflowerblueHsl.l).toBeCloseTo(0.661, 2);
+
+      // coral: rgb(255, 127, 80) -> hsl(16°, 100%, 66%)
+      const coral = normalizeColor('coral')!;
+      const coralHsl = rgbToHsl(getRed(coral), getGreen(coral), getBlue(coral));
+      expect(coralHsl.h).toBeCloseTo(16 / 360, 2);
+      expect(coralHsl.s).toBeCloseTo(1.0, 2);
+      expect(coralHsl.l).toBeCloseTo(0.657, 2);
+
+      // gold: rgb(255, 215, 0) -> hsl(51°, 100%, 50%)
+      const gold = normalizeColor('gold')!;
+      const goldHsl = rgbToHsl(getRed(gold), getGreen(gold), getBlue(gold));
+      expect(goldHsl.h).toBeCloseTo(51 / 360, 2);
+      expect(goldHsl.s).toBeCloseTo(1.0, 2);
+      expect(goldHsl.l).toBeCloseTo(0.5, 2);
+
+      // hotpink: rgb(255, 105, 180) -> hsl(330°, 100%, 71%)
+      const hotpink = normalizeColor('hotpink')!;
+      const hotpinkHsl = rgbToHsl(getRed(hotpink), getGreen(hotpink), getBlue(hotpink));
+      expect(hotpinkHsl.h).toBeCloseTo(330 / 360, 2);
+      expect(hotpinkHsl.s).toBeCloseTo(1.0, 2);
+      expect(hotpinkHsl.l).toBeCloseTo(0.706, 2);
+    });
+
+    it('should be reversible for named colors', () => {
+      const namedColors = ['limegreen', 'cornflowerblue', 'coral', 'gold', 'hotpink', 'teal', 'orchid'];
+
+      namedColors.forEach(colorName => {
+        const color = normalizeColor(colorName)!;
+        const r = getRed(color);
+        const g = getGreen(color);
+        const b = getBlue(color);
+
+        const hsl = rgbToHsl(r, g, b);
+        const rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+        const rOut = getRed(rgb | 0xff);
+        const gOut = getGreen(rgb | 0xff);
+        const bOut = getBlue(rgb | 0xff);
+
+        // Allow small rounding errors
+        expect(rOut).toBeCloseTo(r, 0);
+        expect(gOut).toBeCloseTo(g, 0);
+        expect(bOut).toBeCloseTo(b, 0);
+      });
+    });
+  });
+
+  describe('rgbToHwb', () => {
+    it('should convert RGB to HWB correctly for primary colors', () => {
+      // Red: rgb(255, 0, 0) -> hwb(0, 0%, 0%)
+      const red = rgbToHwb(255, 0, 0);
+      expect(red.h).toBeCloseTo(0, 5);
+      expect(red.w).toBeCloseTo(0, 5);
+      expect(red.b).toBeCloseTo(0, 5);
+
+      // Green: rgb(0, 255, 0) -> hwb(120, 0%, 0%)
+      const green = rgbToHwb(0, 255, 0);
+      expect(green.h).toBeCloseTo(120 / 360, 5);
+      expect(green.w).toBeCloseTo(0, 5);
+      expect(green.b).toBeCloseTo(0, 5);
+
+      // Blue: rgb(0, 0, 255) -> hwb(240, 0%, 0%)
+      const blue = rgbToHwb(0, 0, 255);
+      expect(blue.h).toBeCloseTo(240 / 360, 5);
+      expect(blue.w).toBeCloseTo(0, 5);
+      expect(blue.b).toBeCloseTo(0, 5);
+    });
+
+    it('should handle grayscale colors', () => {
+      // White: rgb(255, 255, 255) -> hwb(0, 100%, 0%)
+      const white = rgbToHwb(255, 255, 255);
+      expect(white.h).toBeCloseTo(0, 5);
+      expect(white.w).toBeCloseTo(1, 5);
+      expect(white.b).toBeCloseTo(0, 5);
+
+      // Black: rgb(0, 0, 0) -> hwb(0, 0%, 100%)
+      const black = rgbToHwb(0, 0, 0);
+      expect(black.h).toBeCloseTo(0, 5);
+      expect(black.w).toBeCloseTo(0, 5);
+      expect(black.b).toBeCloseTo(1, 5);
+
+      // Gray: rgb(128, 128, 128)
+      const gray = rgbToHwb(128, 128, 128);
+      expect(gray.h).toBeCloseTo(0, 5);
+      expect(gray.w).toBeCloseTo(128 / 255, 2);
+      expect(gray.b).toBeCloseTo(127 / 255, 2);
+    });
+
+    it('should be reversible with hwbToRgb', () => {
+      const testColors = [
+        { r: 255, g: 0, b: 0 },
+        { r: 0, g: 255, b: 0 },
+        { r: 0, g: 0, b: 255 },
+        { r: 128, g: 64, b: 192 },
+        { r: 255, g: 128, b: 0 },
+      ];
+
+      testColors.forEach(({ r, g, b }) => {
+        const hwb = rgbToHwb(r, g, b);
+        const rgb = hwbToRgb(hwb.h, hwb.w, hwb.b);
+        const rOut = getRed(rgb | 0xff);
+        const gOut = getGreen(rgb | 0xff);
+        const bOut = getBlue(rgb | 0xff);
+
+        // Allow small rounding errors
+        expect(rOut).toBeCloseTo(r, 0);
+        expect(gOut).toBeCloseTo(g, 0);
+        expect(bOut).toBeCloseTo(b, 0);
+      });
+    });
+
+    it('should correctly convert named colors to HWB', () => {
+      // limegreen: rgb(50, 205, 50) -> hwb(120°, 20%, 20%)
+      const limegreen = normalizeColor('limegreen')!;
+      const limegreenHwb = rgbToHwb(getRed(limegreen), getGreen(limegreen), getBlue(limegreen));
+      expect(limegreenHwb.h).toBeCloseTo(120 / 360, 2);
+      expect(limegreenHwb.w).toBeCloseTo(50 / 255, 2);
+      expect(limegreenHwb.b).toBeCloseTo(50 / 255, 2);
+
+      // cornflowerblue: rgb(100, 149, 237) -> hwb(219°, 39%, 7%)
+      const cornflowerblue = normalizeColor('cornflowerblue')!;
+      const cornflowerblueHwb = rgbToHwb(getRed(cornflowerblue), getGreen(cornflowerblue), getBlue(cornflowerblue));
+      expect(cornflowerblueHwb.h).toBeCloseTo(219 / 360, 2);
+      expect(cornflowerblueHwb.w).toBeCloseTo(100 / 255, 2);
+      expect(cornflowerblueHwb.b).toBeCloseTo(18 / 255, 2);
+
+      // coral: rgb(255, 127, 80) -> hwb(16°, 31%, 0%)
+      const coral = normalizeColor('coral')!;
+      const coralHwb = rgbToHwb(getRed(coral), getGreen(coral), getBlue(coral));
+      expect(coralHwb.h).toBeCloseTo(16 / 360, 2);
+      expect(coralHwb.w).toBeCloseTo(80 / 255, 2);
+      expect(coralHwb.b).toBeCloseTo(0, 2);
+
+      // gold: rgb(255, 215, 0) -> hwb(51°, 0%, 0%)
+      const gold = normalizeColor('gold')!;
+      const goldHwb = rgbToHwb(getRed(gold), getGreen(gold), getBlue(gold));
+      expect(goldHwb.h).toBeCloseTo(51 / 360, 2);
+      expect(goldHwb.w).toBeCloseTo(0, 2);
+      expect(goldHwb.b).toBeCloseTo(0, 2);
+
+      // silver: rgb(192, 192, 192) -> hwb(0°, 75%, 25%)
+      const silver = normalizeColor('silver')!;
+      const silverHwb = rgbToHwb(getRed(silver), getGreen(silver), getBlue(silver));
+      expect(silverHwb.h).toBeCloseTo(0, 2);
+      expect(silverHwb.w).toBeCloseTo(192 / 255, 2);
+      expect(silverHwb.b).toBeCloseTo(63 / 255, 2);
+    });
+
+    it('should be reversible for named colors', () => {
+      const namedColors = ['limegreen', 'cornflowerblue', 'coral', 'gold', 'silver', 'teal', 'orchid', 'hotpink'];
+
+      namedColors.forEach(colorName => {
+        const color = normalizeColor(colorName)!;
+        const r = getRed(color);
+        const g = getGreen(color);
+        const b = getBlue(color);
+
+        const hwb = rgbToHwb(r, g, b);
+        const rgb = hwbToRgb(hwb.h, hwb.w, hwb.b);
+        const rOut = getRed(rgb | 0xff);
+        const gOut = getGreen(rgb | 0xff);
+        const bOut = getBlue(rgb | 0xff);
+
+        // Allow small rounding errors
+        expect(rOut).toBeCloseTo(r, 0);
+        expect(gOut).toBeCloseTo(g, 0);
+        expect(bOut).toBeCloseTo(b, 0);
+      });
     });
   });
 
